@@ -4,356 +4,730 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIS BL27 — Analyse Nations Élite</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --navy: #0a1628; --blue: #1a3a6b; --accent: #c8a84b;
-    --text: #f0f4f8; --muted: #8ba3be;
-    --aut: #CC0001; --fra: #002395; --ita: #009246; --nor: #EF2B2D; --sui: #D52B1E;
-  }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--navy); font-family: 'Barlow', sans-serif; }
-  .deck { width: 100%; height: 100vh; position: relative; }
-  .slide {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
-    padding: 40px 64px 28px; background: var(--navy);
-  }
-  .slide.active { opacity: 1; pointer-events: all; }
-  .slide::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--blue),var(--accent),var(--blue)); }
+*, *::before, *::after {
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-  /* SLIDE 1 */
-  #s1 { justify-content:center; align-items:flex-start; }
-  #s1 .eyebrow { font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; }
-  #s1 h1 { font-family:'Barlow Condensed',sans-serif; font-size:clamp(48px,7vw,88px); font-weight:800; color:var(--text); line-height:0.95; margin-bottom:28px; }
-  #s1 h1 span { color:var(--accent); }
-  #s1 .subtitle { font-size:18px; font-weight:300; color:var(--muted); max-width:520px; line-height:1.6; margin-bottom:48px; }
-  #s1 .stats-row { display:flex; gap:40px; }
-  #s1 .stat { display:flex; flex-direction:column; }
-  #s1 .stat-val { font-family:'Barlow Condensed',sans-serif; font-size:44px; font-weight:800; color:var(--text); line-height:1; }
-  #s1 .stat-lbl { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-top:4px; }
-  #s1 .bg-decor { position:absolute; right:-40px; top:50%; transform:translateY(-50%); font-family:'Barlow Condensed',sans-serif; font-size:280px; font-weight:800; color:rgba(255,255,255,0.03); user-select:none; line-height:1; }
+:root{
+  --navy:#0a1628;
+  --blue:#1a3a6b;
+  --accent:#c8a84b;
+  --text:#f0f4f8;
+  --muted:#8ba3be;
+}
 
-  /* SLIDE HEADER */
-  .slide-header { margin-bottom:18px; }
-  .slide-header .label { font-family:'Barlow Condensed',sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
-  .slide-header h2 { font-family:'Barlow Condensed',sans-serif; font-size:clamp(24px,3vw,40px); font-weight:600; color:var(--text); line-height:1.1; }
-  .slide-header p { font-size:13px; color:var(--muted); margin-top:4px; }
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--navy);
+  font-family:'Barlow',sans-serif;
+}
 
-  /* SLIDE 2 */
-  .nations-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; flex:1; align-items:stretch; }
-  .nation-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:18px 14px; display:flex; flex-direction:column; position:relative; overflow:hidden; }
-  .nation-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-  .nation-card.aut::before{background:var(--aut);} .nation-card.fra::before{background:var(--fra);}
-  .nation-card.ita::before{background:var(--ita);} .nation-card.nor::before{background:var(--nor);}
-  .nation-card.sui::before{background:var(--sui);}
-  .nc-name { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; color:var(--text); margin-bottom:10px; }
-  .nc-total { font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:800; color:var(--text); line-height:1; }
-  .nc-sub { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
-  .nc-split { display:flex; gap:12px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
-  .nc-split-item { display:flex; flex-direction:column; }
-  .nc-split-item .val { font-family:'Barlow Condensed',sans-serif; font-size:19px; font-weight:600; }
-  .nc-split-item .lbl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-  .nc-split-item .val.h { color:#6aaed6; } .nc-split-item .val.d { color:#e8a0c0; }
+.deck{
+  width:100%;
+  height:100vh;
+  position:relative;
+}
 
-  /* SLIDES 3 & 4 */
-  .controls-row { display:flex; align-items:center; gap:16px; margin-bottom:12px; }
-  .legend-row { display:flex; gap:20px; }
-  .leg { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); }
-  .leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
-  .toggle-wrap { display:flex; background:rgba(255,255,255,0.07); border-radius:6px; padding:3px; margin-left:auto; }
-  .toggle-btn { font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:1px; padding:5px 14px; border:none; border-radius:4px; cursor:pointer; background:transparent; color:var(--muted); transition:all 0.2s; }
-  .toggle-btn.active { background:var(--accent); color:#1a1a1a; font-weight:600; }
-  .sort-note { font-size:11px; color:var(--muted); letter-spacing:1px; font-style:italic; }
+.slide{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .5s ease;
+  padding:40px 64px 28px;
+  background:var(--navy);
+}
 
-  .chart-layout { display:grid; grid-template-columns:1fr 300px; gap:28px; flex:1; min-height:0; }
-  .chart-wrap { position:relative; min-height:0; }
-  .ranking-panel { display:flex; flex-direction:column; gap:10px; justify-content:center; }
-  .rank-item { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:12px; }
-  .rank-pos { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800; color:var(--accent); width:32px; flex-shrink:0; }
-  .rank-nation { font-family:'Barlow Condensed',sans-serif; font-size:17px; font-weight:600; width:44px; flex-shrink:0; }
-  .rank-bar-wrap { flex:1; background:rgba(255,255,255,0.07); border-radius:3px; height:5px; overflow:hidden; }
-  .rank-bar { height:100%; border-radius:3px; transition:width 0.8s ease; }
-  .rank-vals { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; min-width:72px; }
-  .rank-abs { font-family:'Barlow Condensed',sans-serif; font-size:17px; color:var(--text); line-height:1; }
-  .rank-pct { font-size:11px; color:var(--muted); }
+.slide.active{
+  opacity:1;
+  pointer-events:all;
+}
 
-  /* SLIDE 5 */
-  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; flex:1; }
-  .insight-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:22px 26px; }
-  .ic-tag { font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-  .insight-card h3 { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:600; color:var(--text); margin-bottom:8px; line-height:1.2; }
-  .insight-card p { font-size:13px; color:var(--muted); line-height:1.7; }
-  .insight-card.alert { border-color:rgba(231,76,60,0.4); background:rgba(231,76,60,0.07); }
-  .insight-card.alert .ic-tag { color:#e74c3c; }
-  .insight-card.positive { border-color:rgba(200,168,75,0.4); background:rgba(200,168,75,0.07); }
-  .insight-card.positive .ic-tag { color:var(--accent); }
-  .insight-card.info { border-color:rgba(106,174,214,0.4); background:rgba(106,174,214,0.07); }
-  .insight-card.info .ic-tag { color:#6aaed6; }
-  .insight-card.neutral .ic-tag { color:var(--muted); }
+.slide::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:4px;
+  background:linear-gradient(90deg,var(--blue),var(--accent),var(--blue));
+}
 
-  /* NAV */
-  .nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:16px; z-index:100; background:rgba(10,22,40,0.88); border:1px solid rgba(255,255,255,0.12); border-radius:40px; padding:8px 20px; backdrop-filter:blur(8px); }
-  .nav-btn { background:none; border:none; cursor:pointer; color:var(--muted); font-size:18px; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; }
-  .nav-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
-  .nav-dots { display:flex; gap:8px; }
-  .nav-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.2); cursor:pointer; transition:background 0.3s,transform 0.3s; }
-  .nav-dot.active { background:var(--accent); transform:scale(1.4); }
-  .slide-counter { font-family:'Barlow Condensed',sans-serif; font-size:13px; color:var(--muted); letter-spacing:2px; min-width:40px; text-align:center; }
+/* COVER */
+
+#s1{
+  justify-content:center;
+  align-items:flex-start;
+}
+
+#s1 .eyebrow{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:20px;
+}
+
+#s1 h1{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(48px,7vw,88px);
+  font-weight:800;
+  color:var(--text);
+  line-height:.95;
+  margin-bottom:28px;
+}
+
+#s1 h1 span{
+  color:var(--accent);
+}
+
+#s1 .subtitle{
+  font-size:18px;
+  font-weight:300;
+  color:var(--muted);
+  max-width:520px;
+  line-height:1.6;
+  margin-bottom:48px;
+}
+
+#s1 .stats-row{
+  display:flex;
+  gap:40px;
+}
+
+#s1 .stat{
+  display:flex;
+  flex-direction:column;
+}
+
+#s1 .stat-val{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:44px;
+  font-weight:800;
+  color:var(--text);
+  line-height:1;
+}
+
+#s1 .stat-lbl{
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+#s1 .bg-decor{
+  position:absolute;
+  right:-40px;
+  top:50%;
+  transform:translateY(-50%);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:280px;
+  font-weight:800;
+  color:rgba(255,255,255,.03);
+  user-select:none;
+  line-height:1;
+}
+
+/* HEADERS */
+
+.slide-header{
+  margin-bottom:18px;
+}
+
+.slide-header .label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:6px;
+}
+
+.slide-header h2{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(24px,3vw,40px);
+  font-weight:600;
+  color:var(--text);
+  line-height:1.1;
+}
+
+.slide-header p{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+/* CHARTS */
+
+.controls-row{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:12px;
+}
+
+.legend-row{
+  display:flex;
+  gap:20px;
+}
+
+.leg{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.leg-dot{
+  width:10px;
+  height:10px;
+  border-radius:2px;
+}
+
+.toggle-wrap{
+  display:flex;
+  background:rgba(255,255,255,.07);
+  border-radius:6px;
+  padding:3px;
+  margin-left:auto;
+}
+
+.toggle-btn{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  letter-spacing:1px;
+  padding:5px 14px;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+  background:transparent;
+  color:var(--muted);
+}
+
+.toggle-btn.active{
+  background:var(--accent);
+  color:#111;
+  font-weight:600;
+}
+
+.chart-layout{
+  display:grid;
+  grid-template-columns:1fr 300px;
+  gap:28px;
+  flex:1;
+  min-height:0;
+}
+
+.chart-wrap{
+  position:relative;
+  min-height:0;
+}
+
+.ranking-panel{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  justify-content:center;
+}
+
+.rank-item{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.rank-pos{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:26px;
+  font-weight:800;
+  color:var(--accent);
+  width:32px;
+}
+
+.rank-nation{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:17px;
+  font-weight:600;
+  width:44px;
+}
+
+.rank-bar-wrap{
+  flex:1;
+  background:rgba(255,255,255,.07);
+  border-radius:3px;
+  height:5px;
+  overflow:hidden;
+}
+
+.rank-bar{
+  height:100%;
+  border-radius:3px;
+  transition:width .8s ease;
+}
+
+.rank-vals{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  min-width:72px;
+}
+
+.rank-abs{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:17px;
+  color:var(--text);
+  line-height:1;
+}
+
+.rank-pct{
+  font-size:11px;
+  color:var(--muted);
+}
+
+/* NAV */
+
+.nav{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  z-index:100;
+  background:rgba(10,22,40,.88);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:40px;
+  padding:8px 20px;
+}
+
+.nav-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:var(--muted);
+  font-size:18px;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+}
+
+.nav-dots{
+  display:flex;
+  gap:8px;
+}
+
+.nav-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:rgba(255,255,255,.2);
+  cursor:pointer;
+}
+
+.nav-dot.active{
+  background:var(--accent);
+  transform:scale(1.4);
+}
+
+.slide-counter{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  color:var(--muted);
+  letter-spacing:2px;
+  min-width:40px;
+  text-align:center;
+}
 </style>
 </head>
+
 <body>
+
 <div class="deck">
 
-  <!-- S1 Cover -->
-  <div class="slide active" id="s1">
-    <div class="eyebrow">Analyse Compétition Ski Alpin International</div>
-    <h1>FIS <span>BL27</span><br>Nations Élite</h1>
-    <p class="subtitle">Répartition des athlètes par tranche de points, nation et genre — comparaison hiérarchique classée par présence en tranche 0–15 pts.</p>
-    <div class="stats-row">
-      <div class="stat"><span class="stat-val">5</span><span class="stat-lbl">Nations</span></div>
-      <div class="stat"><span class="stat-val">3 859</span><span class="stat-lbl">Athlètes</span></div>
-      <div class="stat"><span class="stat-val">6</span><span class="stat-lbl">Tranches FIS</span></div>
-      <div class="stat"><span class="stat-val">BL27</span><span class="stat-lbl">Liste FIS</span></div>
-    </div>
-    <div class="bg-decor">SKI</div>
-  </div>
+<!-- SLIDE 1 -->
 
-  <!-- S2 Vue d'ensemble -->
-  <div class="slide" id="s2">
-    <div class="slide-header">
-      <div class="label">01 — Vue d'ensemble</div>
-      <h2>Effectifs par nation</h2>
-      <p>Nombre total d'athlètes inscrits sur la liste FIS BL27</p>
-    </div>
-    <div class="nations-grid">
-      <div class="nation-card ita"><div class="nc-name">ITA</div><div class="nc-total">1 913</div><div class="nc-sub">Total</div><div class="nc-split"><div class="nc-split-item"><span class="val h">1 146</span><span class="lbl">Hommes</span></div><div class="nc-split-item"><span class="val d">767</span><span class="lbl">Dames</span></div></div></div>
-      <div class="nation-card fra"><div class="nc-name">FRA</div><div class="nc-total">590</div><div class="nc-sub">Total</div><div class="nc-split"><div class="nc-split-item"><span class="val h">388</span><span class="lbl">Hommes</span></div><div class="nc-split-item"><span class="val d">202</span><span class="lbl">Dames</span></div></div></div>
-      <div class="nation-card sui"><div class="nc-name">SUI</div><div class="nc-total">494</div><div class="nc-sub">Total</div><div class="nc-split"><div class="nc-split-item"><span class="val h">295</span><span class="lbl">Hommes</span></div><div class="nc-split-item"><span class="val d">199</span><span class="lbl">Dames</span></div></div></div>
-      <div class="nation-card nor"><div class="nc-name">NOR</div><div class="nc-total">493</div><div class="nc-sub">Total</div><div class="nc-split"><div class="nc-split-item"><span class="val h">304</span><span class="lbl">Hommes</span></div><div class="nc-split-item"><span class="val d">189</span><span class="lbl">Dames</span></div></div></div>
-      <div class="nation-card aut"><div class="nc-name">AUT</div><div class="nc-total">369</div><div class="nc-sub">Total</div><div class="nc-split"><div class="nc-split-item"><span class="val h">221</span><span class="lbl">Hommes</span></div><div class="nc-split-item"><span class="val d">148</span><span class="lbl">Dames</span></div></div></div>
-    </div>
-  </div>
+<div class="slide active" id="s1">
 
-  <!-- S3 Hommes -->
-  <div class="slide" id="s3">
-    <div class="slide-header">
-      <div class="label">02 — Hommes</div>
-      <h2>Classement élite — Tranches 0–15 et 15–23 pts</h2>
-      <p>Nations classées par nombre d'athlètes dans la tranche 0–15 pts (ordre décroissant)</p>
-    </div>
-    <div class="controls-row">
-      <div class="legend-row">
-        <div class="leg"><div class="leg-dot" style="background:#1a3a6b;"></div>0–15 pts (top élite)</div>
-        <div class="leg"><div class="leg-dot" style="background:#6aaed6;"></div>15–23 pts</div>
-      </div>
-      <div class="toggle-wrap">
-        <button class="toggle-btn active" id="toggleH-abs" onclick="setModeH('abs')">Valeur absolue</button>
-        <button class="toggle-btn" id="toggleH-pct" onclick="setModeH('pct')">% relatif</button>
-      </div>
-    </div>
-    <div class="chart-layout">
-      <div class="chart-wrap"><canvas id="chartH"></canvas></div>
-      <div class="ranking-panel" id="rankH"></div>
-    </div>
-  </div>
+<div class="eyebrow">
+Analyse Compétition Ski Alpin International
+</div>
 
-  <!-- S4 Dames -->
-  <div class="slide" id="s4">
-    <div class="slide-header">
-      <div class="label">03 — Dames</div>
-      <h2>Classement élite — Tranches 0–15 et 15–23 pts</h2>
-      <p>Nations classées par nombre d'athlètes dans la tranche 0–15 pts (ordre décroissant)</p>
-    </div>
-    <div class="controls-row">
-      <div class="legend-row">
-        <div class="leg"><div class="leg-dot" style="background:#8b1a4a;"></div>0–15 pts (top élite)</div>
-        <div class="leg"><div class="leg-dot" style="background:#e8a0c0;"></div>15–23 pts</div>
-      </div>
-      <div class="toggle-wrap">
-        <button class="toggle-btn active" id="toggleD-abs" onclick="setModeD('abs')">Valeur absolue</button>
-        <button class="toggle-btn" id="toggleD-pct" onclick="setModeD('pct')">% relatif</button>
-      </div>
-    </div>
-    <div class="chart-layout">
-      <div class="chart-wrap"><canvas id="chartD"></canvas></div>
-      <div class="ranking-panel" id="rankD"></div>
-    </div>
-  </div>
+<h1>
+FIS <span>BL27</span><br>
+Nations Élite
+</h1>
 
-  <!-- S5 Insights -->
-  <div class="slide" id="s5">
-    <div class="slide-header">
-      <div class="label">04 — Enseignements clés</div>
-      <h2>Points saillants de l'analyse</h2>
-    </div>
-    <div class="insights-grid">
-      <div class="insight-card positive">
-        <div class="ic-tag">Hommes — tranche 0–15 pts</div>
-        <h3>AUT et FRA à égalité en valeur absolue</h3>
-        <p>Autriche et France comptent chacune <strong style="color:var(--text)">11 athlètes</strong> dans la tranche top élite. Mais en proportion, l'AUT domine (5.0% vs 2.8%) car son effectif total est bien plus faible.</p>
-      </div>
-      <div class="insight-card positive">
-        <div class="ic-tag">Dames — tranche 0–15 pts</div>
-        <h3>L'Italie 1re en absolu malgré un faible ratio</h3>
-        <p>L'Italie compte <strong style="color:var(--text)">7 dames</strong> dans la tranche 0–15, devant l'Autriche (4) et la Suisse (3). Mais avec 767 athlètes au total, son ratio ne représente que 0.9% — l'Autriche reste plus efficiente.</p>
-      </div>
-      <div class="insight-card alert">
-        <div class="ic-tag">Signal d'alerte — France</div>
-        <h3>Zéro dame en tranche 0–15 pts</h3>
-        <p>La France est la seule nation sans aucune skieuse dans la tranche top élite. Un signal structurel préoccupant, indépendamment de la lecture absolue ou relative.</p>
-      </div>
-      <div class="insight-card info">
-        <div class="ic-tag">Lecture absolue vs relative</div>
-        <h3>Deux lectures, deux classements différents</h3>
-        <p>En absolu, l'Italie pèse toujours plus (effectif 4× supérieur). En relatif, l'Autriche et la Suisse révèlent une meilleure densité d'élite. Les deux lectures sont complémentaires.</p>
-      </div>
-    </div>
-  </div>
+<p class="subtitle">
+Répartition des athlètes par tranche de points, nation et genre — comparaison hiérarchique classée par présence en tranche 0–15 pts.
+</p>
+
+<div class="stats-row">
+
+<div class="stat">
+<span class="stat-val">5</span>
+<span class="stat-lbl">Nations</span>
+</div>
+
+<div class="stat">
+<span class="stat-val">3 859</span>
+<span class="stat-lbl">Athlètes</span>
+</div>
+
+<div class="stat">
+<span class="stat-val">6</span>
+<span class="stat-lbl">Tranches FIS</span>
+</div>
+
+<div class="stat">
+<span class="stat-val">BL27</span>
+<span class="stat-lbl">Liste FIS</span>
+</div>
 
 </div>
 
+<div class="bg-decor">SKI</div>
+
+</div>
+
+<!-- SLIDE 2 HOMMES -->
+
+<div class="slide" id="s2">
+
+<div class="slide-header">
+<div class="label">01 — Hommes</div>
+<h2>Classement élite — Tranches 0–15 et 15–23 pts</h2>
+<p>Nations classées par nombre d'athlètes dans la tranche 0–15 pts</p>
+</div>
+
+<div class="controls-row">
+
+<div class="legend-row">
+<div class="leg">
+<div class="leg-dot" style="background:#1a3a6b;"></div>
+0–15 pts
+</div>
+
+<div class="leg">
+<div class="leg-dot" style="background:#6aaed6;"></div>
+15–23 pts
+</div>
+</div>
+
+<div class="toggle-wrap">
+<button class="toggle-btn active" id="toggleH-abs" onclick="setModeH('abs')">Valeur absolue</button>
+<button class="toggle-btn" id="toggleH-pct" onclick="setModeH('pct')">% relatif</button>
+</div>
+
+</div>
+
+<div class="chart-layout">
+<div class="chart-wrap">
+<canvas id="chartH"></canvas>
+</div>
+
+<div class="ranking-panel" id="rankH"></div>
+</div>
+
+</div>
+
+<!-- SLIDE 3 DAMES -->
+
+<div class="slide" id="s3">
+
+<div class="slide-header">
+<div class="label">02 — Dames</div>
+<h2>Classement élite — Tranches 0–15 et 15–23 pts</h2>
+<p>Nations classées par nombre d'athlètes dans la tranche 0–15 pts</p>
+</div>
+
+<div class="controls-row">
+
+<div class="legend-row">
+<div class="leg">
+<div class="leg-dot" style="background:#8b1a4a;"></div>
+0–15 pts
+</div>
+
+<div class="leg">
+<div class="leg-dot" style="background:#e8a0c0;"></div>
+15–23 pts
+</div>
+</div>
+
+<div class="toggle-wrap">
+<button class="toggle-btn active" id="toggleD-abs" onclick="setModeD('abs')">Valeur absolue</button>
+<button class="toggle-btn" id="toggleD-pct" onclick="setModeD('pct')">% relatif</button>
+</div>
+
+</div>
+
+<div class="chart-layout">
+<div class="chart-wrap">
+<canvas id="chartD"></canvas>
+</div>
+
+<div class="ranking-panel" id="rankD"></div>
+</div>
+
+</div>
+
+</div>
+
+<!-- NAV -->
+
 <div class="nav">
-  <button class="nav-btn" onclick="navigate(-1)">&#8592;</button>
-  <div class="nav-dots" id="dots"></div>
-  <div class="slide-counter" id="counter">1 / 5</div>
-  <button class="nav-btn" onclick="navigate(1)">&#8594;</button>
+
+<button class="nav-btn" onclick="navigate(-1)">←</button>
+
+<div class="nav-dots" id="dots"></div>
+
+<div class="slide-counter" id="counter">1 / 3</div>
+
+<button class="nav-btn" onclick="navigate(1)">→</button>
+
 </div>
 
 <script>
-const slides = document.querySelectorAll('.slide');
-const dotsEl = document.getElementById('dots');
-let current = 0;
-let chartsBuilt = false;
 
-slides.forEach((_,i)=>{ const d=document.createElement('div'); d.className='nav-dot'+(i===0?' active':''); d.onclick=()=>goTo(i); dotsEl.appendChild(d); });
+const slides=document.querySelectorAll('.slide');
+const dotsEl=document.getElementById('dots');
 
-function goTo(n) {
+let current=0;
+let chartsBuilt=false;
+
+slides.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='nav-dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function goTo(n){
+
   slides[current].classList.remove('active');
   dotsEl.children[current].classList.remove('active');
+
   current=(n+slides.length)%slides.length;
+
   slides[current].classList.add('active');
   dotsEl.children[current].classList.add('active');
+
   document.getElementById('counter').textContent=(current+1)+' / '+slides.length;
-  if((current===2||current===3)&&!chartsBuilt) { buildCharts(); chartsBuilt=true; }
+
+  if((current===1||current===2)&&!chartsBuilt){
+    buildCharts();
+    chartsBuilt=true;
+  }
 }
-function navigate(d){goTo(current+d);}
+
+function navigate(d){
+  goTo(current+d);
+}
+
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='ArrowDown') navigate(1);
   if(e.key==='ArrowLeft'||e.key==='ArrowUp') navigate(-1);
 });
 
-// ── DATA ──
-// Sorted by t015 absolute descending
-const rawH = [
-  {n:'AUT', total:221, t015:11, t1523:6,  color:'#CC0001'},
-  {n:'FRA', total:388, t015:11, t1523:6,  color:'#002395'},
-  {n:'SUI', total:295, t015:9,  t1523:7,  color:'#D52B1E'},
-  {n:'NOR', total:304, t015:7,  t1523:13, color:'#EF2B2D'},
-  {n:'ITA', total:1146,t015:4,  t1523:10, color:'#009246'},
-];
-const rawD = [
-  {n:'ITA', total:767, t015:7,  t1523:12, color:'#009246'},
-  {n:'AUT', total:148, t015:4,  t1523:7,  color:'#CC0001'},
-  {n:'SUI', total:199, t015:3,  t1523:13, color:'#D52B1E'},
-  {n:'NOR', total:189, t015:2,  t1523:3,  color:'#EF2B2D'},
-  {n:'FRA', total:202, t015:0,  t1523:7,  color:'#002395'},
+/* DATA */
+
+const rawH=[
+  {n:'AUT',total:221,t015:11,t1523:6,color:'#CC0001'},
+  {n:'FRA',total:388,t015:11,t1523:6,color:'#002395'},
+  {n:'SUI',total:295,t015:9,t1523:7,color:'#D52B1E'},
+  {n:'NOR',total:304,t015:7,t1523:13,color:'#EF2B2D'},
+  {n:'ITA',total:1146,t015:4,t1523:10,color:'#009246'}
 ];
 
-let chartH=null, chartD=null;
-let modeH='abs', modeD='abs';
+const rawD=[
+  {n:'ITA',total:767,t015:7,t1523:12,color:'#009246'},
+  {n:'AUT',total:148,t015:4,t1523:7,color:'#CC0001'},
+  {n:'SUI',total:199,t015:3,t1523:13,color:'#D52B1E'},
+  {n:'NOR',total:189,t015:2,t1523:3,color:'#EF2B2D'},
+  {n:'FRA',total:202,t015:0,t1523:7,color:'#002395'}
+];
 
-function pct(v,t){return Math.round(v/t*1000)/10;}
+let chartH=null;
+let chartD=null;
 
-function buildChartForGenre(raw, canvasId, c1, c2, mode) {
-  const labels = raw.map(r=>r.n);
-  let d015, d1523, yLabel, tooltipFn;
-  if(mode==='abs'){
-    d015  = raw.map(r=>r.t015);
-    d1523 = raw.map(r=>r.t1523);
-    yLabel='Athlètes';
-    tooltipFn=ctx=>ctx.dataset.label+' : '+ctx.parsed.y+' athlètes';
-  } else {
-    d015  = raw.map(r=>pct(r.t015,  r.total));
-    d1523 = raw.map(r=>pct(r.t1523, r.total));
-    yLabel='% du total national';
-    tooltipFn=ctx=>ctx.dataset.label+' : '+ctx.parsed.y+'%';
-  }
+function pct(v,t){
+  return Math.round(v/t*1000)/10;
+}
+
+function buildChart(raw,id,c1,c2,mode){
+
+  const labels=raw.map(r=>r.n);
+
+  const d015=mode==='abs'
+    ? raw.map(r=>r.t015)
+    : raw.map(r=>pct(r.t015,r.total));
+
+  const d1523=mode==='abs'
+    ? raw.map(r=>r.t1523)
+    : raw.map(r=>pct(r.t1523,r.total));
+
   return {
     type:'bar',
-    data:{ labels, datasets:[
-      { label:'0–15 pts', data:d015,  backgroundColor:c1, stack:'s', borderRadius:3 },
-      { label:'15–23 pts',data:d1523, backgroundColor:c2, stack:'s', borderRadius:3 }
-    ]},
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'0–15 pts',
+          data:d015,
+          backgroundColor:c1,
+          stack:'s',
+          borderRadius:3
+        },
+        {
+          label:'15–23 pts',
+          data:d1523,
+          backgroundColor:c2,
+          stack:'s',
+          borderRadius:3
+        }
+      ]
+    },
     options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:tooltipFn}}},
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false}
+      },
       scales:{
-        x:{ticks:{color:'#8ba3be',font:{size:13,weight:'bold'}},grid:{color:'rgba(255,255,255,0.05)'}},
-        y:{stacked:true,ticks:{color:'#8ba3be',font:{size:11},callback:v=>mode==='abs'?v:v+'%'},grid:{color:'rgba(255,255,255,0.05)'}, title:{display:true,text:yLabel,color:'#8ba3be',font:{size:11}}}
+        x:{
+          ticks:{
+            color:'#8ba3be',
+            font:{size:13,weight:'bold'}
+          }
+        },
+        y:{
+          stacked:true,
+          ticks:{
+            color:'#8ba3be'
+          }
+        }
       }
     }
   };
 }
 
-function buildRanking(panelId, raw, mode) {
-  const panel = document.getElementById(panelId);
+function buildRanking(panelId,raw,mode){
+
+  const panel=document.getElementById(panelId);
+
   panel.innerHTML='';
-  const maxVal = mode==='abs'
-    ? Math.max(...raw.map(r=>r.t015+r.t1523))
-    : Math.max(...raw.map(r=>pct(r.t015,r.total)+pct(r.t1523,r.total)));
+
+  const maxVal=Math.max(...raw.map(r=>r.t015+r.t1523));
+
   raw.forEach((r,i)=>{
-    const abs015=r.t015, abs1523=r.t1523;
-    const p015=pct(r.t015,r.total), p1523=pct(r.t1523,r.total);
-    const barVal = mode==='abs' ? abs015+abs1523 : p015+p1523;
-    const barW = maxVal>0 ? Math.round(barVal/maxVal*100) : 0;
+
+    const barW=Math.round((r.t015+r.t1523)/maxVal*100);
+
     const el=document.createElement('div');
+
     el.className='rank-item';
+
     el.innerHTML=`
       <div class="rank-pos">${i+1}</div>
-      <div class="rank-nation" style="color:${r.color}">${r.n}</div>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:0%;background:${r.color}" data-w="${barW}"></div></div>
+      <div class="rank-nation" style="color:${r.color}">
+        ${r.n}
+      </div>
+
+      <div class="rank-bar-wrap">
+        <div class="rank-bar"
+          style="width:0%;background:${r.color}"
+          data-w="${barW}">
+        </div>
+      </div>
+
       <div class="rank-vals">
-        <div class="rank-abs">${mode==='abs' ? abs015+' / '+abs1523 : p015+'% / '+p1523+'%'}</div>
-        <div class="rank-pct">${mode==='abs' ? '0–15 / 15–23 ath.' : '0–15 / 15–23'}</div>
-      </div>`;
+        <div class="rank-abs">
+          ${r.t015} / ${r.t1523}
+        </div>
+        <div class="rank-pct">
+          0–15 / 15–23
+        </div>
+      </div>
+    `;
+
     panel.appendChild(el);
   });
-  setTimeout(()=>{ panel.querySelectorAll('.rank-bar').forEach(b=>b.style.width=b.dataset.w+'%'); },80);
+
+  setTimeout(()=>{
+    panel.querySelectorAll('.rank-bar')
+      .forEach(b=>b.style.width=b.dataset.w+'%');
+  },80);
 }
 
 function buildCharts(){
-  chartH=new Chart(document.getElementById('chartH'), buildChartForGenre(rawH,'chartH','#1a3a6b','#6aaed6','abs'));
-  chartD=new Chart(document.getElementById('chartD'), buildChartForGenre(rawD,'chartD','#8b1a4a','#e8a0c0','abs'));
+
+  chartH=new Chart(
+    document.getElementById('chartH'),
+    buildChart(rawH,'chartH','#1a3a6b','#6aaed6','abs')
+  );
+
+  chartD=new Chart(
+    document.getElementById('chartD'),
+    buildChart(rawD,'chartD','#8b1a4a','#e8a0c0','abs')
+  );
+
   buildRanking('rankH',rawH,'abs');
   buildRanking('rankD',rawD,'abs');
 }
 
-function setModeH(m){
-  modeH=m;
-  document.getElementById('toggleH-abs').classList.toggle('active',m==='abs');
-  document.getElementById('toggleH-pct').classList.toggle('active',m==='pct');
-  if(chartH){chartH.destroy();}
-  chartH=new Chart(document.getElementById('chartH'), buildChartForGenre(rawH,'chartH','#1a3a6b','#6aaed6',m));
-  buildRanking('rankH',rawH,m);
-}
-function setModeD(m){
-  modeD=m;
-  document.getElementById('toggleD-abs').classList.toggle('active',m==='abs');
-  document.getElementById('toggleD-pct').classList.toggle('active',m==='pct');
-  if(chartD){chartD.destroy();}
-  chartD=new Chart(document.getElementById('chartD'), buildChartForGenre(rawD,'chartD','#8b1a4a','#e8a0c0',m));
-  buildRanking('rankD',rawD,m);
+function setModeH(mode){
+
+  document.getElementById('toggleH-abs')
+    .classList.toggle('active',mode==='abs');
+
+  document.getElementById('toggleH-pct')
+    .classList.toggle('active',mode==='pct');
+
+  chartH.destroy();
+
+  chartH=new Chart(
+    document.getElementById('chartH'),
+    buildChart(rawH,'chartH','#1a3a6b','#6aaed6',mode)
+  );
 }
 
-setTimeout(()=>{
-  const hint=document.createElement('div');
-  hint.style.cssText='position:fixed;bottom:76px;right:28px;font-size:11px;color:rgba(139,163,190,0.45);letter-spacing:1px;';
-  hint.textContent='← → pour naviguer';
-  document.body.appendChild(hint);
-  setTimeout(()=>hint.remove(),3000);
-},800);
+function setModeD(mode){
+
+  document.getElementById('toggleD-abs')
+    .classList.toggle('active',mode==='abs');
+
+  document.getElementById('toggleD-pct')
+    .classList.toggle('active',mode==='pct');
+
+  chartD.destroy();
+
+  chartD=new Chart(
+    document.getElementById('chartD'),
+    buildChart(rawD,'chartD','#8b1a4a','#e8a0c0',mode)
+  );
+}
+
 </script>
+
 </body>
 </html>
