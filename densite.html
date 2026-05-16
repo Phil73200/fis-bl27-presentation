@@ -509,6 +509,7 @@ Répartition des athlètes par tranche de points, nation et genre — comparaiso
 
 <script>
 
+<script>
 const slides=document.querySelectorAll('.slide');
 const dotsEl=document.getElementById('dots');
 
@@ -523,7 +524,6 @@ slides.forEach((_,i)=>{
 });
 
 function goTo(n){
-
   slides[current].classList.remove('active');
   dotsEl.children[current].classList.remove('active');
 
@@ -540,9 +540,7 @@ function goTo(n){
   }
 }
 
-function navigate(d){
-  goTo(current+d);
-}
+function navigate(d){ goTo(current+d); }
 
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='ArrowDown') navigate(1);
@@ -574,8 +572,14 @@ function pct(v,t){
   return Math.round(v/t*1000)/10;
 }
 
-function buildChart(raw,id,c1,c2,mode){
+function hexToRgba(hex,alpha){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
+function buildChart(raw,mode){
   const labels=raw.map(r=>r.n);
 
   const d015=mode==='abs'
@@ -601,72 +605,68 @@ function buildChart(raw,id,c1,c2,mode){
         {
           label:'15–23 pts',
           data:d1523,
-          backgroundColor:raw.map(r=>r.color),
+          backgroundColor:raw.map(r=>hexToRgba(r.color,0.45)),
           stack:'s',
-          borderRadius:3,
-          opacity:0.5
+          borderRadius:3
         }
       ]
     },
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false}
-      },
+      plugins:{ legend:{display:false} },
       scales:{
         x:{
-          ticks:{
-            color:'#8ba3be',
-            font:{size:13,weight:'bold'}
-          }
+          ticks:{ color:'#8ba3be', font:{size:13,weight:'bold'} },
+          grid:{ color:'rgba(255,255,255,0.05)' }
         },
         y:{
           stacked:true,
           ticks:{
-            color:'#8ba3be'
-          }
+            color:'#8ba3be',
+            callback:v=>mode==='abs'?v:v+'%'
+          },
+          grid:{ color:'rgba(255,255,255,0.05)' }
         }
       }
     }
   };
 }
+
 function buildRanking(panelId,raw,mode){
-
   const panel=document.getElementById(panelId);
-
   panel.innerHTML='';
 
-  const maxVal=Math.max(...raw.map(r=>r.t015+r.t1523));
+  const values=raw.map(r=>{
+    return mode==='abs'
+      ? r.t015+r.t1523
+      : pct(r.t015,r.total)+pct(r.t1523,r.total);
+  });
+
+  const maxVal=Math.max(...values);
 
   raw.forEach((r,i)=>{
+    const barVal=values[i];
+    const barW=Math.round(barVal/maxVal*100);
 
-    const barW=Math.round((r.t015+r.t1523)/maxVal*100);
+    const txt=mode==='abs'
+      ? `${r.t015} / ${r.t1523}`
+      : `${pct(r.t015,r.total)}% / ${pct(r.t1523,r.total)}%`;
 
     const el=document.createElement('div');
-
     el.className='rank-item';
 
     el.innerHTML=`
       <div class="rank-pos">${i+1}</div>
-      <div class="rank-nation" style="color:${r.color}">
-        ${r.n}
-      </div>
+      <div class="rank-nation" style="color:${r.color}">${r.n}</div>
 
       <div class="rank-bar-wrap">
-        <div class="rank-bar"
-          style="width:0%;background:${r.color}"
-          data-w="${barW}">
-        </div>
+        <div class="rank-bar" style="width:0%;background:${r.color}" data-w="${barW}"></div>
       </div>
 
       <div class="rank-vals">
-        <div class="rank-abs">
-          ${r.t015} / ${r.t1523}
-        </div>
-        <div class="rank-pct">
-          0–15 / 15–23
-        </div>
+        <div class="rank-abs">${txt}</div>
+        <div class="rank-pct">0–15 / 15–23</div>
       </div>
     `;
 
@@ -680,15 +680,14 @@ function buildRanking(panelId,raw,mode){
 }
 
 function buildCharts(){
-
   chartH=new Chart(
     document.getElementById('chartH'),
-    buildChart(rawH,'chartH','#1a3a6b','#6aaed6','abs')
+    buildChart(rawH,'abs')
   );
 
   chartD=new Chart(
     document.getElementById('chartD'),
-    buildChart(rawD,'chartD','#8b1a4a','#e8a0c0','abs')
+    buildChart(rawD,'abs')
   );
 
   buildRanking('rankH',rawH,'abs');
@@ -696,38 +695,32 @@ function buildCharts(){
 }
 
 function setModeH(mode){
+  document.getElementById('toggleH-abs').classList.toggle('active',mode==='abs');
+  document.getElementById('toggleH-pct').classList.toggle('active',mode==='pct');
 
-  document.getElementById('toggleH-abs')
-    .classList.toggle('active',mode==='abs');
-
-  document.getElementById('toggleH-pct')
-    .classList.toggle('active',mode==='pct');
-
-  chartH.destroy();
+  if(chartH) chartH.destroy();
 
   chartH=new Chart(
     document.getElementById('chartH'),
-    buildChart(rawH,'chartH','#1a3a6b','#6aaed6',mode)
+    buildChart(rawH,mode)
   );
+
+  buildRanking('rankH',rawH,mode);
 }
 
 function setModeD(mode){
+  document.getElementById('toggleD-abs').classList.toggle('active',mode==='abs');
+  document.getElementById('toggleD-pct').classList.toggle('active',mode==='pct');
 
-  document.getElementById('toggleD-abs')
-    .classList.toggle('active',mode==='abs');
-
-  document.getElementById('toggleD-pct')
-    .classList.toggle('active',mode==='pct');
-
-  chartD.destroy();
+  if(chartD) chartD.destroy();
 
   chartD=new Chart(
     document.getElementById('chartD'),
-    buildChart(rawD,'chartD','#8b1a4a','#e8a0c0',mode)
+    buildChart(rawD,mode)
   );
+
+  buildRanking('rankD',rawD,mode);
 }
-
 </script>
-
 </body>
 </html>
