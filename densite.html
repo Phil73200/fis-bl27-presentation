@@ -552,19 +552,19 @@ document.addEventListener('keydown',e=>{
 /* DATA */
 
 const rawH=[
-  {n:'AUT',total:221,t015:11,t1523:6,color:'#CC0001'},
-  {n:'FRA',total:388,t015:11,t1523:6,color:'#002395'},
-  {n:'SUI',total:295,t015:9,t1523:7,color:'#D52B1E'},
-  {n:'NOR',total:304,t015:7,t1523:13,color:'#EF2B2D'},
-  {n:'ITA',total:1146,t015:4,t1523:10,color:'#009246'}
+  {n:'AUT',total:221,t015:11,t1523:6,color:'#FF3B30'},
+  {n:'FRA',total:388,t015:11,t1523:6,color:'#66CCFF'},
+  {n:'SUI',total:295,t015:9,t1523:7,color:'#FF66CC'},
+  {n:'NOR',total:304,t015:7,t1523:13,color:'#FFD84D'},
+  {n:'ITA',total:1146,t015:4,t1523:10,color:'#00C853'}
 ];
 
 const rawD=[
-  {n:'ITA',total:767,t015:7,t1523:12,color:'#009246'},
-  {n:'AUT',total:148,t015:4,t1523:7,color:'#CC0001'},
-  {n:'SUI',total:199,t015:3,t1523:13,color:'#D52B1E'},
-  {n:'NOR',total:189,t015:2,t1523:3,color:'#EF2B2D'},
-  {n:'FRA',total:202,t015:0,t1523:7,color:'#002395'}
+  {n:'ITA',total:767,t015:7,t1523:12,color:'#00C853'},
+  {n:'AUT',total:148,t015:4,t1523:7,color:'#FF3B30'},
+  {n:'SUI',total:199,t015:3,t1523:13,color:'#FF66CC'},
+  {n:'NOR',total:189,t015:2,t1523:3,color:'#FFD84D'},
+  {n:'FRA',total:202,t015:0,t1523:7,color:'#66CCFF'}
 ];
 
 let chartH=null;
@@ -594,16 +594,17 @@ function buildChart(raw,id,c1,c2,mode){
         {
           label:'0–15 pts',
           data:d015,
-          backgroundColor:c1,
+          backgroundColor:raw.map(r=>r.color),
           stack:'s',
           borderRadius:3
         },
         {
           label:'15–23 pts',
           data:d1523,
-          backgroundColor:c2,
+          backgroundColor:raw.map(r=>r.color),
           stack:'s',
-          borderRadius:3
+          borderRadius:3,
+          opacity:0.5
         }
       ]
     },
@@ -630,7 +631,6 @@ function buildChart(raw,id,c1,c2,mode){
     }
   };
 }
-
 function buildRanking(panelId,raw,mode){
 
   const panel=document.getElementById(panelId);
